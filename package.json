@@ -4,15 +4,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc && node scripts/copy-files.js",
+    "build": "rimraf dist && tsc && node ./scripts/copy-files.js",
     "prepare": "npm run build",
-    "test": "vitest",
-    "copy-files": "cp -r src/data-files dist/data-files"
+    "test": "vitest"
   },
   "bin": "dist/__main__.js",
-  "files": [
-    "dist"
-  ],
+	"files": ["dist", "README.md", "LICENSE*"],
   "type": "module",
   "keywords": [],
   "author": "",
