@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc && npm run copy-files",
+    "build": "rimraf dist && tsc && node scripts/copy-files.js",
+    "prepare": "npm run build",
     "test": "vitest",
     "copy-files": "cp -r src/data-files dist/data-files"
   },
