@@ -6,8 +6,7 @@
   "scripts": {
     "build": "rimraf dist && tsc && npm run copy-files",
     "test": "vitest",
-    "copy-files": "cp -r src/data-files dist/data-files",
-    "prepare": "npm run build"
+    "copy-files": "cp -r src/data-files dist/data-files"
   },
   "bin": "dist/__main__.js",
   "files": [
