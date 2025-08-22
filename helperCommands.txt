@@ -16,3 +16,6 @@ git rebase master
 # либо просто слить:
 # git merge master
 git push origin feature/fx --force-with-lease   # если был rebase
+
+
+git push origin feature/fx
