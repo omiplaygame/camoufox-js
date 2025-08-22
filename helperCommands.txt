@@ -1,0 +1,18 @@
+git remote -v
+# если upstream нет — добавь оригинал (у camoufox-js он такой):
+git remote add upstream https://github.com/apify/camoufox-js.git
+
+git fetch upstream
+git checkout master
+git reset --hard upstream/master
+git push origin master --force-with-lease
+git branch -vv
+git remote show origin
+
+
+git checkout feature/fx
+# либо аккуратно «поверх»:
+git rebase master
+# либо просто слить:
+# git merge master
+git push origin feature/fx --force-with-lease   # если был rebase
