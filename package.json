@@ -1,16 +1,20 @@
 {
   "name": "camoufox-js",
-  "version": "0.6.2",
+  "version": "0.6.2-fx.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc && npm run copy-files",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc && node scripts/copy-files.mjs",
     "test": "vitest",
-    "copy-files": "cp -r src/data-files dist/data-files"
+    "copy-files": "cp -r src/data-files dist/data-files",
+    "prepack": "npm run build"
   },
   "bin": "dist/__main__.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE*"
   ],
   "type": "module",
   "keywords": [],
