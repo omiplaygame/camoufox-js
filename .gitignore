@@ -5,3 +5,4 @@ dist/
 .npmrc
 .vscode/
 package-lock.json
+camoufox-js-*.tgz
