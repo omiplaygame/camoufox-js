@@ -110,3 +110,6 @@ git commit -m "chore: bump version to 1.56.0-fx.2"
 
 # Отправить в удалённый репозиторий
 git push
+
+8) Создать архив
+npm pack
