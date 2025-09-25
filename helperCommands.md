@@ -47,6 +47,11 @@ git checkout feature/fx
 # Аккуратно "переписать" историю фичи поверх актуального master (линейная история)
 git rebase master
 
+# Добавить конфликтующие файлы как есть
+git checkout --ours yarn.lock
+git add yarn.lock
+git rebase --continue
+
 # Если был rebase — пушим с безопасным форсом, чтобы обновить удалённую ветку
 git push origin feature/fx --force-with-lease
 Альтернатива без переписи истории:
@@ -113,3 +118,6 @@ git push
 
 8) Создать архив
 npm pack
+
+9) Автоматизировать (чтобы всегда брать master для yarn.lock)
+git config --global merge.ours.driver true
