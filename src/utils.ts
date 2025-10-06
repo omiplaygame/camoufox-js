@@ -365,54 +365,6 @@ export function syncAttachVD(browser: any, virtualDisplay?: VirtualDisplay | nul
 	return browser;
 }
 
-function applySocksProxyForFirefox(launchOptions: LaunchOptions, url: URL): void
-{
-	const proto = url.protocol?.toLowerCase();
-	if (proto !== 'socks5:' && proto !== 'socks5h:') return;
-
-	const remoteDns = proto === 'socks5h:';
-	launchOptions.firefoxUserPrefs = {
-		...(launchOptions.firefoxUserPrefs ?? {}),
-		'network.proxy.type': 1,
-		'network.proxy.socks': url.hostname, // ВАЖНО: только hostname
-		'network.proxy.socks_port': Number(url.port || 1080),
-		'network.proxy.socks_version': 5,
-		'network.proxy.socks_remote_dns': remoteDns, // эквивалент socks5h
-		'network.proxy.no_proxies_on': '',
-	};
-
-	// Чтобы Playwright ничего не перетёр — убираем proxy-объект
-	delete launchOptions.proxy;
-}
-
-function applyProxy(
-	launchOptions: LaunchOptions,
-	proxyInput: string | {
-		server: string;
-		bypass?: string | undefined;
-		username?: string | undefined;
-		password?: string | undefined;
-	} | undefined): void
-{
-	const url = getProxyUrl(proxyInput);
-	if (!url) return;
-
-	// camoufox-js => целимся в Firefox, поэтому SOCKS переносим в prefs
-	if (url.protocol === 'socks5:' || url.protocol === 'socks5h:')
-	{
-		applySocksProxyForFirefox(launchOptions, url);
-		return;
-	}
-
-	// HTTP/HTTPS — штатный путь
-	launchOptions.proxy = {
-		server: url.toString()
-	};
-
-	if (url.username) launchOptions.proxy.username = url.username;
-	if (url.password) launchOptions.proxy.password = url.password;
-}
-
 export interface LaunchOptions
 {
 	/** Operating system to use for the fingerprint generation.
@@ -552,6 +504,14 @@ function getProxyUrl(proxy: PlaywrightLaunchOptions['proxy'] | string): URL | nu
 	if (password) url.password = password;
 
 	return url;
+}
+
+function toPlaywrightServer(u: URL): string | undefined
+{
+	if (!u.protocol || !u.host) throw new Error('Bad proxy URL');
+	// url.host уже содержит host:port (и [] для IPv6, если вдруг)
+	// Для Playwright годится: http://host:port или socks5://host:port
+	return `${u.protocol}//${u.host}`;
 }
 
 export async function launchOptions({
@@ -872,17 +832,14 @@ export async function launchOptions({
 		executable_path = launchPath();
 	}
 
-	// 1) Маппим прокси (SOCKS -> prefs, HTTP -> proxy)
-	applyProxy(launch_options, proxy);
-
-	// 2) Мержим prefs: то, что вернул applyProxy, + твои локальные prefs
+	// 1) Мержим prefs: то, что вернул applyProxy, + твои локальные prefs
 	const mergedFirefoxPrefs = {
 		...(launch_options.firefoxUserPrefs || {}),
 		...(firefox_user_prefs || {}),
 	};
 
-	// 3) Берём proxy «как получилось» после applyProxy (или undefined)
-	const effectiveProxy = launch_options.proxy;
+	// 2) Берём proxy «как получилось» после applyProxy (или undefined)
+	const server = proxyUrl ? toPlaywrightServer(proxyUrl) : undefined;
 
 	const out: PlaywrightLaunchOptions = {
 		...launch_options,
@@ -893,7 +850,12 @@ export async function launchOptions({
 			...env
 		},
 		"firefoxUserPrefs": mergedFirefoxPrefs,
-		"proxy": effectiveProxy,
+		"proxy": proxyUrl && server ? {
+			server,
+			username: proxyUrl.username,
+			password: proxyUrl.password,
+			bypass: typeof proxy === 'string' ? undefined : proxy?.bypass,
+		} : undefined,
 		"headless": headless
 	};
 
