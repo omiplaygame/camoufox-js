@@ -96,6 +96,7 @@ export async function publicIP(proxy?: string): Promise<string>
 
 	const LIMIT_RETRIES = 2;
 	const allErrors = [];
+	const TIMEOUT_MS = 7_000;
 
 	for (let attempt = 1; attempt <= LIMIT_RETRIES; attempt++)
 	{
@@ -126,7 +127,7 @@ export async function publicIP(proxy?: string): Promise<string>
 			{
 				const impit = new Impit({
 					proxyUrl: proxyForFetch,
-					timeout: 5000,
+					timeout: TIMEOUT_MS,
 					headers: {
 						Accept: "text/plain"
 					},
