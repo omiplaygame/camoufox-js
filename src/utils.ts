@@ -892,9 +892,13 @@ export async function launchOptions({
 	const server = proxyUrl ? toPlaywrightServer(proxyUrl) : undefined;
 
 	const out: PlaywrightLaunchOptions = {
+		...launch_options,
 		executablePath: executable_path,
 		args: args,
-		env: env_vars as any,
+		env: {
+			...env_vars as any,
+			...env
+		},
 		firefoxUserPrefs: mergedFirefoxPrefs,
 		proxy: proxyUrl && server ? {
 			server,
@@ -902,8 +906,7 @@ export async function launchOptions({
 			password: proxyUrl.password,
 			bypass: typeof proxy === 'string' ? undefined : proxy?.bypass,
 		} : undefined,
-		headless: headless,
-		...launch_options,
+		headless: headless
 	};
 
 	return out;
