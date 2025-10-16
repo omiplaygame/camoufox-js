@@ -1,4 +1,4 @@
-import { Impit } from 'impit';
+import { Impit } from "impit";
 
 export class InvalidIP extends Error { }
 export class InvalidProxy extends Error { }
