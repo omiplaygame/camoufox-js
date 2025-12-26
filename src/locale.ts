@@ -215,7 +215,7 @@ export async function getGeolocation(ip: string): Promise<Geolocation> {
 	const reader = await maxmind.open<CityResponse>(MMDB_FILE);
 
 	const resp = reader.get(ip)!;
-	const isoCode = resp.country?.iso_code.toUpperCase();
+	const isoCode = resp?.country?.iso_code?.toUpperCase();
 	const location = resp.location;
 
 	if (
