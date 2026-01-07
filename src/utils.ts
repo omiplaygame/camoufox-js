@@ -29,7 +29,7 @@ import
 	generateFingerprint,
 	SUPPORTED_OS,
 } from "./fingerprints.js";
-import { publicIP, validIPv4, validIPv6 } from "./ip.js";
+import { publicIP, validIPv4, validIPv6, InvalidIP } from "./ip.js";
 import { geoipAllowed, getGeolocation, handleLocales } from "./locale.js";
 import FONTS from "./mappings/fonts.config.js";
 import { getPath, installedVerStr, launchPath, OS_NAME } from "./pkgman.js";
@@ -38,6 +38,9 @@ import { LeakWarning } from "./warnings.js";
 import { sampleWebGL } from "./webgl/sample.js";
 
 type Screen = FingerprintGeneratorOptions["screen"];
+interface ProxyModel extends NonNullable < PlaywrightLaunchOptions["proxy"] > {
+	publicIpHint?: string | boolean | undefined;
+}
 
 // Camoufox preferences to cache previous pages and requests
 const CACHE_PREFS = {
@@ -501,7 +504,7 @@ export interface LaunchOptions
 	/** Proxy to use for the browser.
 	 * Note: If `geoip` is `true`, a request will be sent through this proxy to find the target IP.
 	 */
-	proxy?: string | PlaywrightLaunchOptions["proxy"];
+	proxy?: string | ProxyModel;
 
 	/** Cache previous pages, requests, etc. (uses more memory). */
 	enable_cache?: boolean;
@@ -747,9 +750,16 @@ export async function launchOptions({
 	if (geoip)
 	{
 		geoipAllowed();
+		// Used cache?
+		const hint = (proxy as ProxyModel)?.publicIpHint;
 
-		// Find the user's IP address
-		geoip = await publicIP(proxyUrl?.href);
+		if (typeof hint === "string" && hint.length)
+			geoip = hint;
+		else
+		{
+			// Find the user's IP address
+			geoip = await publicIP(proxyUrl?.href);
+		}
 
 		// Spoof WebRTC if not blocked
 		if (!block_webrtc)
@@ -763,9 +773,15 @@ export async function launchOptions({
 				setInto(config, "webrtc:ipv6", geoip);
 			}
 		}
-
-		const geolocation = await getGeolocation(geoip);
-		config = { ...config, ...geolocation.asConfig() };
+		try {
+		  const geolocation = await getGeolocation(geoip);
+		  config = { ...config, ...geolocation.asConfig() };
+		}
+		catch(e)
+		{
+			throw new InvalidIP(`Invalid IP address: ${geoip}`);
+		}
+		
 	}
 
 	// Raise a warning when a proxy is being used without spoofing geolocation.
